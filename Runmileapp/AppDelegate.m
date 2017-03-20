@@ -26,6 +26,8 @@
 - (BOOL)application:(UIApplication *)application
 didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     NSLog(@"didFinishLaunchingWithOptions");
+    
+
     // Register for remote notifications
     if (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_7_1) {
         // iOS 7.1 or earlier. Disable the deprecation warnings.
@@ -76,6 +78,7 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Add observer for InstanceID token refresh callback.
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tokenRefreshNotification:)
                                                  name:kFIRInstanceIDTokenRefreshNotification object:nil];
+    
     return YES;
 }
 
@@ -91,8 +94,28 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
     NSLog(@"Message ID: %@", userInfo[@"gcm.message_id"]);
     
     // Print full message.
-    NSLog(@"%@", userInfo);
-    
+    NSLog(@"%@", [[userInfo valueForKey:@"notification"] valueForKey:@"body"]);
+//    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Runmile" message:[NSString stringWithFormat:@"%@",[[userInfo valueForKey:@"notification"] valueForKey:@"body"]]delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil];
+//    
+//    [alertView show];
+   // UIApplicationState state = [application applicationState];
+ //   if (state == UIApplicationStateActive) {
+    UILocalNotification *localNotification = [[UILocalNotification alloc] init];
+    localNotification.userInfo = userInfo;
+    localNotification.soundName = UILocalNotificationDefaultSoundName;
+    localNotification.alertBody = [[userInfo valueForKey:@"notification"] valueForKey:@"body"];
+    localNotification.fireDate = [NSDate date];
+    [[UIApplication sharedApplication] scheduleLocalNotification:localNotification];
+ //   }
+//    else
+//    {
+//        UILocalNotification *localNotification = [[UILocalNotification alloc] init];
+//        localNotification.userInfo = userInfo;
+//        localNotification.soundName = UILocalNotificationDefaultSoundName;
+//        localNotification.alertBody = [[userInfo valueForKey:@"notification"] valueForKey:@"body"];
+//        localNotification.fireDate = [NSDate date];
+//        [[UIApplication sharedApplication] scheduleLocalNotification:localNotification];
+//    }
 }
 // [END receive_message]
 
@@ -154,6 +177,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     [[FIRMessaging messaging] disconnect];
     NSLog(@"Disconnected from FCM");
+    [self connectToFcm];
 }
 // [END disconnect_from_fcm]
 
